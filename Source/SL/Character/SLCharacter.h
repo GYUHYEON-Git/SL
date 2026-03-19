@@ -11,8 +11,9 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
-class USLAttributeComponent;
 class USLPlayerHUDWidget;
+class USLAttributeComponent;
+class USLStateComponent;
 
 UCLASS()
 class SL_API ASLCharacter : public ACharacter
@@ -36,7 +37,11 @@ private:
 	TObjectPtr<UInputAction> LookAction;
 	
 	UPROPERTY(EditAnywhere, Category = "Input")
-	TObjectPtr<UInputAction> SprintAction;
+	TObjectPtr<UInputAction> SprintRollingAction;
+
+protected:
+	UPROPERTY(EditAnywhere, Category = "Montage")
+	TObjectPtr<UAnimMontage> RollingMontage;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "UI")
@@ -48,6 +53,9 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USLAttributeComponent> AttributeComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USLStateComponent> StateComponent;
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement Data")
@@ -70,6 +78,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
+	FORCEINLINE TObjectPtr<USLStateComponent> GetStateComponent() const { return StateComponent; }
+
+public:
 
 	void Move(const FInputActionValue& Values);
 
@@ -82,4 +93,5 @@ protected:
 
 	void StopSprint();
 
+	void Rolling();
 };

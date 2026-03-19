@@ -8,8 +8,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "UI/SLPlayerHUDWidget.h"
+#include "SLGameplayTags.h"
 
 #include "Components/SLAttributeComponent.h"
+#include "Components/SLStateComponent.h"
 
 ASLCharacter::ASLCharacter() {
 	PrimaryActorTick.bCanEverTick = true;
@@ -35,6 +37,7 @@ ASLCharacter::ASLCharacter() {
 	Camera->bUsePawnControlRotation = false;
 
 	AttributeComponent = CreateDefaultSubobject<USLAttributeComponent>(TEXT("Attribute"));
+	StateComponent = CreateDefaultSubobject<USLStateComponent>(TEXT("State"));
 }
 
 void ASLCharacter::BeginPlay() {
@@ -68,13 +71,16 @@ void ASLCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ThisClass::Sprinting);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ThisClass::StopSprint);
+		EnhancedInputComponent->BindAction(SprintRollingAction, ETriggerEvent::Triggered, this, &ThisClass::Sprinting);
+		EnhancedInputComponent->BindAction(SprintRollingAction, ETriggerEvent::Completed, this, &ThisClass::StopSprint);
+		EnhancedInputComponent->BindAction(SprintRollingAction, ETriggerEvent::Canceled, this, &ThisClass::Rolling);
 	}
 
 }
 
 void ASLCharacter::Move(const FInputActionValue& Values) {
+	check(StateComponent);
+	//if (StateComponent->MovementInputEnabled() == false) return;
 	FVector2D MovementVector = Values.Get<FVector2D>();
 	if (Controller != nullptr) {
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -117,4 +123,17 @@ void ASLCharacter::Sprinting() {
 void ASLCharacter::StopSprint() {
 	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 	AttributeComponent->ToggleStaminaRegeneration(true);
+}
+
+void ASLCharacter::Rolling() {
+	check(AttributeComponent);
+	check(StateComponent);
+	if (AttributeComponent->CheckHasEnoughStamina(15.f)) {
+		AttributeComponent->ToggleStaminaRegeneration(false);
+		StateComponent->ToggleMovementInput(false);
+		AttributeComponent->DecreaseStamina(15.f);
+		PlayAnimMontage(RollingMontage);
+		StateComponent->SetState(SLGameplayTags::Character_State_Rolling);
+		AttributeComponent->ToggleStaminaRegeneration(true, 1.5f);
+	}
 }
