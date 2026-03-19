@@ -11,6 +11,8 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class USLAttributeComponent;
+class USLPlayerHUDWidget;
 
 UCLASS()
 class SL_API ASLCharacter : public ACharacter
@@ -32,6 +34,27 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> SprintAction;
+
+protected:
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<USLPlayerHUDWidget> PlayerHUDWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<USLPlayerHUDWidget> PlayerHUDWidget;
+
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USLAttributeComponent> AttributeComponent;
+
+protected:
+	UPROPERTY(VisibleAnywhere, Category = "Movement Data")
+	float NormalSpeed = 500.f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement Data")
+	float SprintSpeed = 750.f;
 
 public:
 	ASLCharacter();
@@ -51,5 +74,12 @@ public:
 	void Move(const FInputActionValue& Values);
 
 	void Look(const FInputActionValue& Values);
+
+protected:
+	bool IsMoving() const;
+
+	void Sprinting();
+
+	void StopSprint();
 
 };
